@@ -4,24 +4,23 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Donnington Grove Green Book</title>
-  
   <style>
     :root {
-      --bg-color: #0b0f12;
-      --surface-glass: rgba(18, 24, 30, 0.78);
-      --surface-border: rgba(255, 255, 255, 0.12);
+      --bg-color: #0e1317;
+      --card-bg: #1a2228;
       --accent-color: #2ecc71;
-      --accent-glow: rgba(46, 204, 113, 0.35);
-      --text-main: #f8fafc;
-      --text-muted: #94a3b8;
+      --text-color: #f5f6fa;
+      --text-muted: #a4b0be;
+      --white-tee: #ffffff;
+      --yellow-tee: #f1c40f;
+      --red-tee: #e74c3c;
     }
 
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-      -webkit-tap-highlight-color: transparent;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
 
     html, body {
@@ -30,695 +29,474 @@
       height: 100dvh;
       overflow: hidden;
       background-color: var(--bg-color);
-      color: var(--text-main);
-      user-select: none;
-      -webkit-user-select: none;
+      color: var(--text-color);
     }
 
-    /* Fullscreen viewport container */
-    #app-container {
-      position: relative;
-      width: 100%;
-      height: 100%;
+    body {
       display: flex;
       flex-direction: column;
-      overflow: hidden;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px;
     }
 
-    /* Floating Glass Header */
+    /* Top Navigation Header */
     header {
-      position: absolute;
-      top: 12px;
-      left: 12px;
-      right: 12px;
-      z-index: 50;
+      width: 100%;
+      max-width: 600px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 8px 14px;
-      background: var(--surface-glass);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border: 1px solid var(--surface-border);
-      border-radius: 14px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+      padding: 8px 12px;
+      background: var(--card-bg);
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+      flex-shrink: 0;
+      z-index: 100;
     }
 
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .brand-icon {
-      width: 22px;
-      height: 22px;
-      fill: var(--accent-color);
-    }
-
-    .brand-title {
+    .title {
       font-size: 0.95rem;
-      font-weight: 800;
-      letter-spacing: -0.3px;
-    }
-
-    .brand-title span {
+      font-weight: 700;
       color: var(--accent-color);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
-    .header-actions {
+    .menu-container {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
     }
 
-    select.hole-select {
-      background: rgba(0, 0, 0, 0.4);
-      color: var(--accent-color);
-      border: 1px solid var(--surface-border);
+    label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    select {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      border: 1px solid var(--accent-color);
       padding: 6px 10px;
-      border-radius: 8px;
+      border-radius: 6px;
       font-size: 0.85rem;
-      font-weight: 700;
       outline: none;
       cursor: pointer;
     }
 
-    .icon-btn {
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid var(--surface-border);
-      color: var(--text-main);
-      width: 34px;
-      height: 34px;
-      border-radius: 8px;
+    /* Flipbook Main Display Area */
+    .book-wrapper {
+      position: relative;
+      width: 100%;
+      max-width: 600px;
+      flex: 1;
+      min-height: 0;
+      margin: 6px 0;
+      perspective: 1500px;
       display: flex;
-      align-items: center;
       justify-content: center;
-      cursor: pointer;
-      transition: all 0.2s ease;
+      align-items: center;
+      touch-action: pan-y;
     }
 
-    .icon-btn:hover, .icon-btn:active {
-      background: var(--accent-color);
-      color: #0b0f12;
-      border-color: var(--accent-color);
-    }
-
-    /* Main Viewport Stage */
-    .viewport-stage {
-      position: absolute;
-      inset: 0;
+    .flipbook {
+      position: relative;
       width: 100%;
       height: 100%;
+      transform-style: preserve-3d;
+    }
+
+    .page {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      background-color: var(--card-bg);
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.6);
+      backface-visibility: hidden;
+      transform-origin: left center;
+      transition: transform 0.5s cubic-bezier(0.4, 0.2, 0.2, 1), visibility 0.5s;
+      display: flex;
+      flex-direction: column;
+      user-select: none;
+    }
+
+    .page.flipped {
+      transform: rotateY(-180deg);
+      pointer-events: none;
+      visibility: hidden;
+    }
+
+    .page.hidden-page {
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .page-image-container {
+      position: relative;
+      width: 100%;
+      flex: 1;
+      min-height: 0;
+      background: #000;
       display: flex;
       justify-content: center;
       align-items: center;
       overflow: hidden;
-      background: radial-gradient(circle at center, #151d24 0%, #080b0e 100%);
     }
 
-    /* Image Wrapper & Transform Target */
-    .map-frame {
-      position: absolute;
-      width: 100%;
-      height: 100%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      transition: opacity 0.3s ease, transform 0.25s cubic-bezier(0.25, 1, 0.5, 1);
-      cursor: grab;
-    }
-
-    .map-frame:active {
-      cursor: grabbing;
-    }
-
-    .map-frame img {
+    .page-image-container img {
       max-width: 100%;
       max-height: 100%;
       width: auto;
       height: auto;
       object-fit: contain;
+      transition: transform 0.3s ease;
       pointer-events: none;
-      filter: drop-shadow(0 10px 25px rgba(0,0,0,0.6));
     }
 
-    .map-frame.fit-cover img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    /* Floating Action Controls Overlay */
-    .zoom-overlay {
-      position: absolute;
-      right: 14px;
-      top: 50%;
-      transform: translateY(-50%);
-      z-index: 40;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      background: var(--surface-glass);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      border: 1px solid var(--surface-border);
-      padding: 6px;
-      border-radius: 12px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-    }
-
-    .zoom-indicator {
-      font-size: 0.65rem;
-      font-weight: 800;
-      color: var(--accent-color);
-      text-align: center;
-      padding: 2px 0;
-    }
-
-    /* Floating Bottom Navigation Bar */
-    footer {
-      position: absolute;
-      bottom: 12px;
-      left: 12px;
-      right: 12px;
-      z-index: 50;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 8px 12px;
-      background: var(--surface-glass);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border: 1px solid var(--surface-border);
-      border-radius: 16px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
-    }
-
-    .nav-btn {
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid var(--surface-border);
-      color: var(--text-main);
-      padding: 8px 14px;
-      border-radius: 10px;
-      font-size: 0.85rem;
-      font-weight: 700;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      transition: all 0.2s;
-    }
-
-    .nav-btn:hover:not(:disabled), .nav-btn:active:not(:disabled) {
-      background: var(--accent-color);
-      color: #0b0f12;
-      border-color: var(--accent-color);
-      box-shadow: 0 0 12px var(--accent-glow);
-    }
-
-    .nav-btn:disabled {
-      opacity: 0.25;
-      cursor: not-allowed;
-    }
-
-    .hole-badge-container {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      background: rgba(0, 0, 0, 0.35);
-      padding: 6px 14px;
-      border-radius: 12px;
-      border: 1px solid rgba(255,255,255,0.05);
-    }
-
-    .badge-item {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-
-    .badge-label {
-      font-size: 0.6rem;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      font-weight: 700;
-      letter-spacing: 0.5px;
-    }
-
-    .badge-value {
-      font-size: 1rem;
-      font-weight: 900;
-      color: var(--text-main);
-      line-height: 1.1;
-    }
-
-    .badge-value.accent {
-      color: var(--accent-color);
-    }
-
-    .nine-indicator {
-      font-size: 0.62rem;
-      background: rgba(46, 204, 113, 0.15);
-      color: var(--accent-color);
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-weight: 700;
-    }
-
-    /* Loading Spinner & Status Overlays */
-    .spinner {
-      position: absolute;
-      width: 44px;
-      height: 44px;
-      border: 4px solid rgba(255, 255, 255, 0.1);
-      border-top-color: var(--accent-color);
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-      z-index: 10;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    .error-card {
+    .img-placeholder {
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 24px;
+      padding: 20px;
       text-align: center;
       color: var(--text-muted);
-      gap: 12px;
-      background: var(--surface-glass);
-      border: 1px solid var(--surface-border);
-      border-radius: 16px;
-      z-index: 10;
+      font-size: 0.85rem;
     }
 
-    .error-card svg {
-      width: 48px;
-      height: 48px;
-      stroke: var(--accent-color);
+    /* Integrated Scorecard Footer */
+    .page-info {
+      height: 68px;
+      flex-shrink: 0;
+      background: #12171c;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 2.2fr;
+      align-items: center;
+      border-top: 1px solid #232d36;
+      padding: 0 8px;
+      gap: 4px;
     }
 
-    /* Quick gesture hint toast */
-    .gesture-toast {
-      position: absolute;
-      top: 70px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 45;
-      background: rgba(0, 0, 0, 0.7);
-      border: 1px solid var(--surface-border);
+    .info-box {
+      text-align: center;
+    }
+
+    .info-label {
+      font-size: 0.65rem;
       color: var(--text-muted);
-      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .info-value {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--accent-color);
+    }
+
+    .yardages-box {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.04);
+      padding: 4px 6px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .tee-badge {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .tee-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-bottom: 2px;
+      display: inline-block;
+    }
+
+    .dot-white { background-color: var(--white-tee); }
+    .dot-yellow { background-color: var(--yellow-tee); }
+    .dot-red { background-color: var(--red-tee); }
+
+    .tee-yard {
+      font-size: 0.78rem;
       font-weight: 600;
-      padding: 4px 12px;
-      border-radius: 20px;
-      pointer-events: none;
-      opacity: 0.8;
+    }
+
+    .tee-white { color: var(--white-tee); }
+    .tee-yellow { color: var(--yellow-tee); }
+    .tee-red { color: var(--red-tee); }
+
+    /* Bottom Toolbar */
+    .controls {
+      width: 100%;
+      max-width: 600px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 8px 12px;
+      background: var(--card-bg);
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+      flex-shrink: 0;
+      z-index: 100;
+    }
+
+    .btn {
+      background: var(--bg-color);
+      color: var(--text-color);
+      border: 1px solid #33414d;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      flex: 1;
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    .btn:hover, .btn:active {
+      background: var(--accent-color);
+      color: #12181b;
+    }
+
+    .btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+      background: var(--bg-color);
+      color: var(--text-color);
+    }
+
+    .page-counter {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      text-align: center;
+      padding: 0 4px;
+      white-space: nowrap;
     }
   </style>
 </head>
 <body>
 
-  <div id="app-container">
-    
-    <!-- Top Header -->
-    <header>
-      <div class="brand">
-        <svg class="brand-icon" viewBox="0 0 24 24">
-          <path d="M19.38 3.55a1 1 0 0 0-1.13.23l-5.63 6.18V2a1 1 0 0 0-2 0v16.17a4 4 0 1 0 2 0V11.8l5.88-6.45a1 1 0 0 0-.12-1.8zM12 21a2 2 0 1 1 2-2 2 2 0 0 1-2 2z"/>
-        </svg>
-        <div class="brand-title">Donnington <span>Green Book</span></div>
-      </div>
-      <div class="header-actions">
-        <select class="hole-select" id="holeSelect" onchange="jumpToHole(parseInt(this.value))">
-          <!-- Dynamically populated -->
-        </select>
-        <button class="icon-btn" id="fitToggleBtn" onclick="toggleFitMode()" title="Toggle Contain/Cover Fit">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>
-          </svg>
-        </button>
-        <button class="icon-btn" id="fullscreenBtn" onclick="toggleFullscreen()" title="Toggle Fullscreen">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
-          </svg>
-        </button>
-      </div>
-    </header>
-
-    <div class="gesture-toast">Pinch / Double-Tap to Zoom • Drag to Pan • Swipe to Switch</div>
-
-    <!-- Main Map Display Area -->
-    <main class="viewport-stage" id="viewportStage">
-      <div class="spinner" id="imageSpinner"></div>
-      <div class="map-frame" id="mapFrame">
-        <img id="mapImage" src="" alt="Golf Hole Green Map" />
-      </div>
-    </main>
-
-    <!-- Floating Side Zoom Tools -->
-    <div class="zoom-overlay">
-      <button class="icon-btn" onclick="changeZoom(0.3)" title="Zoom In">+</button>
-      <div class="zoom-indicator" id="zoomLevel">1.0x</div>
-      <button class="icon-btn" onclick="changeZoom(-0.3)" title="Zoom Out">-</button>
-      <button class="icon-btn" onclick="resetView()" title="Reset Zoom & Position">1x</button>
+  <header>
+    <div class="title">Donnington Grove Green Book</div>
+    <div class="menu-container">
+      <label for="holeSelect">Jump:</label>
+      <select id="holeSelect" onchange="jumpToHole(parseInt(this.value))"></select>
     </div>
+  </header>
 
-    <!-- Bottom Navigation Bar -->
-    <footer>
-      <button class="nav-btn" id="prevBtn" onclick="prevHole()">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
-        Prev
-      </button>
+  <div class="book-wrapper" id="bookWrapper">
+    <div class="flipbook" id="flipbook"></div>
+  </div>
 
-      <div class="hole-badge-container">
-        <div class="badge-item">
-          <span class="badge-label">Hole</span>
-          <span class="badge-value accent" id="badgeHole">1</span>
-        </div>
-        <div class="nine-indicator" id="badgeNine">Front 9</div>
-        <div class="badge-item">
-          <span class="badge-label">Par</span>
-          <span class="badge-value" id="badgePar">4</span>
-        </div>
-        <div class="badge-item">
-          <span class="badge-label">HDCP</span>
-          <span class="badge-value" id="badgeHdcp">10</span>
-        </div>
-      </div>
-
-      <button class="icon-btn" onclick="rotateCurrentMap()" title="Rotate 90 Degrees">↻</button>
-
-      <button class="nav-btn" id="nextBtn" onclick="nextHole()">
-        Next
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
-      </button>
-    </footer>
-
+  <div class="controls">
+    <button class="btn" id="prevBtn" onclick="prevPage()">‹ Prev</button>
+    <span class="page-counter" id="pageCounter">Hole 1 of 18</span>
+    <button class="btn" id="nextBtn" onclick="nextPage()">Next ›</button>
+    <button class="btn" id="rotateBtn">Rotate ↻</button>
   </div>
 
   <script>
-    // Full 18-hole dataset with exact user provided URLs
-    const holesData = [
-      { hole: 1,  par: 4, hdcp: 10, img: 'https://i.postimg.cc/CZxdvR77/DG1.jpg' },
-      { hole: 2,  par: 4, hdcp: 4,  img: 'https://i.postimg.cc/xkp8B9pH/DG2.jpg' },
-      { hole: 3,  par: 3, hdcp: 16, img: 'https://i.postimg.cc/Y4CjXvRb/DG3.jpg' },
-      { hole: 4,  par: 5, hdcp: 2,  img: 'https://i.postimg.cc/Lq8hyJDv/DG4.jpg' },
-      { hole: 5,  par: 4, hdcp: 8,  img: 'https://i.postimg.cc/5HKyDfK8/DG5.jpg' },
-      { hole: 6,  par: 3, hdcp: 18, img: 'https://i.postimg.cc/B87bRJ7T/DG6.jpg' },
-      { hole: 7,  par: 4, hdcp: 12, img: 'https://i.postimg.cc/zL2v4q2S/DG7.jpg' },
-      { hole: 8,  par: 5, hdcp: 6,  img: 'https://i.postimg.cc/wt4Mn94Q/DG8.jpg' },
-      { hole: 9,  par: 4, hdcp: 14, img: 'https://i.postimg.cc/mcpkKTpj/DG9.jpg' },
-      { hole: 10, par: 5, hdcp: 5,  img: 'https://i.postimg.cc/TyN1BTNC/DG10.jpg' },
-      { hole: 11, par: 4, hdcp: 1,  img: 'https://i.postimg.cc/94g0scgx/DG11.jpg' },
-      { hole: 12, par: 4, hdcp: 13, img: 'https://i.postimg.cc/8FXcxTXK/DG12.jpg' },
-      { hole: 13, par: 5, hdcp: 7,  img: 'https://i.postimg.cc/94g0scgk/DG13.jpg' },
-      { hole: 14, par: 4, hdcp: 17, img: 'https://i.postimg.cc/Y4D0TtDV/DG14.jpg' },
-      { hole: 15, par: 3, hdcp: 15, img: 'https://i.postimg.cc/NyCFZQCS/DG15.jpg' },
-      { hole: 16, par: 4, hdcp: 3,  img: 'https://i.postimg.cc/FfCzwhCw/DG16.jpg' },
-      { hole: 17, par: 3, hdcp: 9,  img: 'https://i.postimg.cc/v12TCG2p/DG17.jpg' },
-      { hole: 18, par: 4, hdcp: 11, img: 'https://i.postimg.cc/xkp8B9FD/DG18.jpg' }
+    // Official Donnington Grove Course Data & Verified Image Links
+    const holeData = [
+      { hole: 1,  par: 4, si: 10, white: 381, yellow: 373, red: 332, image: 'https://i.postimg.cc/FKjcHcJM/DG1.jpg', rotation: 0 },
+      { hole: 2,  par: 5, si: 8,  white: 583, yellow: 511, red: 487, image: 'https://i.postimg.cc/XJ45GJw2/DG2.jpg', rotation: 0 },
+      { hole: 3,  par: 4, si: 12, white: 411, yellow: 389, red: 348, image: 'https://i.postimg.cc/xdKH1HzD/DG3.jpg', rotation: 0 },
+      { hole: 4,  par: 4, si: 2,  white: 444, yellow: 422, red: 355, image: 'https://i.postimg.cc/BvxDnDKW/DG4.jpg', rotation: 0 },
+      { hole: 5,  par: 3, si: 16, white: 198, yellow: 168, red: 141, image: 'https://i.postimg.cc/V6mtr6jZ/DG5.jpg', rotation: 0 },
+      { hole: 6,  par: 5, si: 6,  white: 559, yellow: 550, red: 438, image: 'https://i.postimg.cc/76wzG6gW/DG6.jpg', rotation: 0 },
+      { hole: 7,  par: 3, si: 18, white: 188, yellow: 155, red: 118, image: 'https://i.postimg.cc/hjcmzj9w/DG7.jpg', rotation: 0 },
+      { hole: 8,  par: 4, si: 4,  white: 463, yellow: 441, red: 391, image: 'https://i.postimg.cc/qR4KhR8S/DG8.jpg', rotation: 0 },
+      { hole: 9,  par: 4, si: 14, white: 329, yellow: 317, red: 289, image: 'https://i.postimg.cc/qR4KhR8P/DG9.jpg', rotation: 0 },
+      { hole: 10, par: 5, si: 5,  white: 624, yellow: 567, red: 498, image: 'https://i.postimg.cc/1tsFntGh/DG10.jpg', rotation: 0 },
+      { hole: 11, par: 4, si: 1,  white: 423, yellow: 382, red: 333, image: 'https://i.postimg.cc/FRNSdRyQ/DG11.jpg', rotation: 0 },
+      { hole: 12, par: 4, si: 13, white: 378, yellow: 366, red: 338, image: 'https://i.postimg.cc/cH03gHRS/DG12.jpg', rotation: 0 },
+      { hole: 13, par: 5, si: 7,  white: 523, yellow: 502, red: 481, image: 'https://i.postimg.cc/4dsc7d6X/DG13.jpg', rotation: 0 },
+      { hole: 14, par: 4, si: 17, white: 368, yellow: 310, red: 270, image: 'https://i.postimg.cc/d1wCk12q/DG14.jpg', rotation: 0 },
+      { hole: 15, par: 3, si: 15, white: 179, yellow: 161, red: 114, image: 'https://i.postimg.cc/ydsRgdm1/DG15.jpg', rotation: 0 },
+      { hole: 16, par: 4, si: 3,  white: 427, yellow: 405, red: 376, image: 'https://i.postimg.cc/gJmhXJVc/DG16.jpg', rotation: 0 },
+      { hole: 17, par: 3, si: 9,  white: 210, yellow: 186, red: 165, image: 'https://i.postimg.cc/50bzY0BN/DG17.jpg', rotation: 0 },
+      { hole: 18, par: 4, si: 11, white: 420, yellow: 371, red: 361, image: 'https://i.postimg.cc/PxTDpxWx/DG18.jpg', rotation: 0 }
     ];
 
-    // State configuration
-    let currentHoleIndex = 0;
-    let isCoverMode = false;
-
-    // Per-hole transformation state storage
-    const holeStates = holesData.map(() => ({
-      rotation: 0,
-      zoom: 1.0,
-      panX: 0,
-      panY: 0
-    }));
-
-    // DOM Elements
-    const viewportStage = document.getElementById('viewportStage');
-    const mapFrame = document.getElementById('mapFrame');
-    const mapImage = document.getElementById('mapImage');
-    const imageSpinner = document.getElementById('imageSpinner');
-    const holeSelect = document.getElementById('holeSelect');
-    const zoomLevelEl = document.getElementById('zoomLevel');
+    let currentIndex = 0;
+    const flipbook = document.getElementById('flipbook');
+    const bookWrapper = document.getElementById('bookWrapper');
+    const selectMenu = document.getElementById('holeSelect');
+    const pageCounter = document.getElementById('pageCounter');
     const prevBtn = document.getElementById('prevBtn');
     const nextBtn = document.getElementById('nextBtn');
-    const badgeHole = document.getElementById('badgeHole');
-    const badgePar = document.getElementById('badgePar');
-    const badgeHdcp = document.getElementById('badgeHdcp');
-    const badgeNine = document.getElementById('badgeNine');
+    const rotateBtn = document.getElementById('rotateBtn');
 
-    function initApp() {
-      // Populate select menu
-      holeSelect.innerHTML = holesData.map((h, i) => `<option value="${i}">Hole ${h.hole}</option>`).join('');
+    function handleImageError(img, holeNum) {
+      const container = img.parentElement;
+      container.innerHTML = `
+        <div class="img-placeholder">
+          <div>Image for <b>Hole ${holeNum}</b> failed to load.</div>
+        </div>
+      `;
+    }
 
-      // Setup Image event handlers
-      mapImage.onload = () => {
-        imageSpinner.style.display = 'none';
-        mapFrame.style.opacity = '1';
-        updateTransform();
-      };
+    function initFlipbook() {
+      flipbook.innerHTML = '';
+      selectMenu.innerHTML = '';
 
-      mapImage.onerror = () => {
-        imageSpinner.style.display = 'none';
-        viewportStage.insertAdjacentHTML('beforeend', `
-          <div class="error-card" id="errorCard">
-            <svg viewBox="0 0 24 24" fill="none"><path d="M12 9v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke-width="2" stroke-linecap="round"/></svg>
-            <div>Unable to load map image for Hole ${holesData[currentHoleIndex].hole}</div>
+      holeData.forEach((item, index) => {
+        const option = document.createElement('option');
+        option.value = index;
+        option.textContent = `Hole ${item.hole}`;
+        selectMenu.appendChild(option);
+
+        const page = document.createElement('div');
+        page.className = 'page';
+        page.id = `page-${index}`;
+        page.style.zIndex = holeData.length - index;
+
+        page.innerHTML = `
+          <div class="page-image-container">
+            <img src="${item.image}" alt="Hole ${item.hole}" onerror="handleImageError(this, ${item.hole})">
           </div>
-        `);
-      };
+          <div class="page-info">
+            <div class="info-box">
+              <div class="info-label">Hole</div>
+              <div class="info-value">${item.hole}</div>
+            </div>
+            <div class="info-box">
+              <div class="info-label">Par</div>
+              <div class="info-value">${item.par}</div>
+            </div>
+            <div class="info-box">
+              <div class="info-label">S.I.</div>
+              <div class="info-value">${item.si}</div>
+            </div>
+            <div class="yardages-box">
+              <div class="tee-badge">
+                <span class="tee-dot dot-white"></span>
+                <span class="tee-yard tee-white">${item.white}</span>
+              </div>
+              <div class="tee-badge">
+                <span class="tee-dot dot-yellow"></span>
+                <span class="tee-yard tee-yellow">${item.yellow}</span>
+              </div>
+              <div class="tee-badge">
+                <span class="tee-dot dot-red"></span>
+                <span class="tee-yard tee-red">${item.red}</span>
+              </div>
+            </div>
+          </div>
+        `;
+        flipbook.appendChild(page);
+      });
 
-      loadHole(0);
-      setupGestures();
+      updateUI();
     }
 
-    function loadHole(index) {
-      const existingError = document.getElementById('errorCard');
-      if (existingError) existingError.remove();
-
-      currentHoleIndex = index;
-      const data = holesData[index];
-
-      // Reset image visibility during swap
-      mapFrame.style.opacity = '0';
-      imageSpinner.style.display = 'block';
-
-      // Update Header & Badge Info
-      holeSelect.value = index;
-      badgeHole.textContent = data.hole;
-      badgePar.textContent = data.par;
-      badgeHdcp.textContent = data.hdcp;
-      badgeNine.textContent = data.hole <= 9 ? 'Front 9' : 'Back 9';
-
-      prevBtn.disabled = index === 0;
-      nextBtn.disabled = index === holesData.length - 1;
-
-      mapImage.src = data.img;
-      updateTransform();
-    }
-
-    function updateTransform() {
-      const state = holeStates[currentHoleIndex];
-      const stageRect = viewportStage.getBoundingClientRect();
-      const stageW = stageRect.width || window.innerWidth;
-      const stageH = stageRect.height || window.innerHeight;
-
-      // Smart rotation scaling factor calculation:
-      // When rotated by 90deg or 270deg, swap dimensions to ensure map fits fully inside viewport edge-to-edge
-      let autoScale = 1.0;
-      if (state.rotation % 180 !== 0) {
-        const aspectContainer = stageW / stageH;
-        // Compensate bounding box constraint when rotated vertically
-        autoScale = Math.min(stageW / stageH, stageH / stageW);
-      }
-
-      const totalScale = state.zoom * autoScale;
-      mapFrame.style.transform = `translate(${state.panX}px, ${state.panY}px) rotate(${state.rotation}deg) scale(${totalScale})`;
-      zoomLevelEl.textContent = `${state.zoom.toFixed(1)}x`;
-    }
-
-    function rotateCurrentMap() {
-      const state = holeStates[currentHoleIndex];
-      state.rotation = (state.rotation + 90) % 360;
-      updateTransform();
-    }
-
-    function changeZoom(delta) {
-      const state = holeStates[currentHoleIndex];
-      state.zoom = Math.max(0.8, Math.min(5.0, state.zoom + delta));
-      if (state.zoom === 1.0) {
-        state.panX = 0;
-        state.panY = 0;
-      }
-      updateTransform();
-    }
-
-    function resetView() {
-      const state = holeStates[currentHoleIndex];
-      state.zoom = 1.0;
-      state.panX = 0;
-      state.panY = 0;
-      updateTransform();
-    }
-
-    function toggleFitMode() {
-      isCoverMode = !isCoverMode;
-      if (isCoverMode) {
-        mapFrame.classList.add('fit-cover');
+    function applyImageTransform(imgElement, rotation) {
+      if (!imgElement) return;
+      if (rotation % 180 !== 0) {
+        const container = imgElement.parentElement;
+        const cWidth = container.clientWidth;
+        const cHeight = container.clientHeight;
+        const scale = Math.min(cWidth / cHeight, cHeight / cWidth);
+        imgElement.style.transform = `rotate(${rotation}deg) scale(${scale})`;
       } else {
-        mapFrame.classList.remove('fit-cover');
+        imgElement.style.transform = `rotate(${rotation}deg) scale(1)`;
       }
-      resetView();
+    }
+
+    function updateUI() {
+      selectMenu.value = currentIndex;
+      pageCounter.textContent = `Hole ${holeData[currentIndex].hole} of 18`;
+      prevBtn.disabled = currentIndex === 0;
+      nextBtn.disabled = currentIndex === holeData.length - 1;
+
+      holeData.forEach((item, index) => {
+        const page = document.getElementById(`page-${index}`);
+        const imgElement = page.querySelector('.page-image-container img');
+
+        applyImageTransform(imgElement, item.rotation);
+
+        if (index < currentIndex) {
+          page.classList.add('flipped');
+          page.classList.remove('hidden-page');
+        } else if (index === currentIndex || index === currentIndex + 1) {
+          page.classList.remove('flipped');
+          page.classList.remove('hidden-page');
+        } else {
+          page.classList.remove('flipped');
+          page.classList.add('hidden-page');
+        }
+      });
+    }
+
+    function nextPage() {
+      if (currentIndex < holeData.length - 1) {
+        currentIndex++;
+        updateUI();
+      }
+    }
+
+    function prevPage() {
+      if (currentIndex > 0) {
+        currentIndex--;
+        updateUI();
+      }
     }
 
     function jumpToHole(index) {
-      if (index >= 0 && index < holesData.length) {
-        loadHole(index);
+      currentIndex = index;
+      updateUI();
+    }
+
+    function rotateCurrentImage() {
+      const pageData = holeData[currentIndex];
+      pageData.rotation = (pageData.rotation + 90) % 360;
+
+      const imgElement = document.getElementById(`page-${currentIndex}`).querySelector('.page-image-container img');
+      applyImageTransform(imgElement, pageData.rotation);
+    }
+
+    rotateBtn.addEventListener('click', rotateCurrentImage);
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight') nextPage();
+      if (e.key === 'ArrowLeft') prevPage();
+      if (e.key === 'r' || e.key === 'R') rotateCurrentImage();
+    });
+
+    let touchStartX = 0;
+    let touchEndX = 0;
+
+    bookWrapper.addEventListener('touchstart', (e) => {
+      touchStartX = e.changedTouches[0].screenX;
+    }, { passive: true });
+
+    bookWrapper.addEventListener('touchend', (e) => {
+      touchEndX = e.changedTouches[0].screenX;
+      if (Math.abs(touchEndX - touchStartX) >= 40) {
+        if (touchEndX < touchStartX) nextPage();
+        else prevPage();
       }
-    }
+    }, { passive: true });
 
-    function prevHole() {
-      if (currentHoleIndex > 0) loadHole(currentHoleIndex - 1);
-    }
+    window.addEventListener('resize', updateUI);
 
-    function nextHole() {
-      if (currentHoleIndex < holesData.length - 1) loadHole(currentHoleIndex + 1);
-    }
-
-    function toggleFullscreen() {
-      if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen().catch(() => {});
-      } else {
-        if (document.exitFullscreen) document.exitFullscreen();
-      }
-    }
-
-    function setupGestures() {
-      let isDragging = false;
-      let startX = 0, startY = 0;
-      let initialPanX = 0, initialPanY = 0;
-      let initialPinchDistance = 0;
-      let initialZoom = 1.0;
-
-      // Mouse Dragging
-      viewportStage.addEventListener('mousedown', (e) => {
-        if (e.target.closest('header, footer, .zoom-overlay')) return;
-        const state = holeStates[currentHoleIndex];
-        isDragging = true;
-        startX = e.clientX;
-        startY = e.clientY;
-        initialPanX = state.panX;
-        initialPanY = state.panY;
-      });
-
-      window.addEventListener('mousemove', (e) => {
-        if (!isDragging) return;
-        const state = holeStates[currentHoleIndex];
-        state.panX = initialPanX + (e.clientX - startX);
-        state.panY = initialPanY + (e.clientY - startY);
-        updateTransform();
-      });
-
-      window.addEventListener('mouseup', () => { isDragging = false; });
-
-      // Touch Handling (Pan & Pinch-to-Zoom & Swipe)
-      let touchStartX = 0, touchStartY = 0;
-
-      viewportStage.addEventListener('touchstart', (e) => {
-        if (e.target.closest('header, footer, .zoom-overlay')) return;
-
-        if (e.touches.length === 1) {
-          isDragging = true;
-          touchStartX = e.touches[0].clientX;
-          touchStartY = e.touches[0].clientY;
-          const state = holeStates[currentHoleIndex];
-          initialPanX = state.panX;
-          initialPanY = state.panY;
-        } else if (e.touches.length === 2) {
-          isDragging = false;
-          initialPinchDistance = Math.hypot(
-            e.touches[0].clientX - e.touches[1].clientX,
-            e.touches[0].clientY - e.touches[1].clientY
-          );
-          initialZoom = holeStates[currentHoleIndex].zoom;
-        }
-      }, { passive: true });
-
-      viewportStage.addEventListener('touchmove', (e) => {
-        const state = holeStates[currentHoleIndex];
-
-        if (e.touches.length === 1 && isDragging) {
-          const deltaX = e.touches[0].clientX - touchStartX;
-          const deltaY = e.touches[0].clientY - touchStartY;
-          state.panX = initialPanX + deltaX;
-          state.panY = initialPanY + deltaY;
-          updateTransform();
-        } else if (e.touches.length === 2 && initialPinchDistance > 0) {
-          const currentDistance = Math.hypot(
-            e.touches[0].clientX - e.touches[1].clientX,
-            e.touches[0].clientY - e.touches[1].clientY
-          );
-          const scaleChange = currentDistance / initialPinchDistance;
-          state.zoom = Math.max(0.8, Math.min(5.0, initialZoom * scaleChange));
-          updateTransform();
-        }
-      }, { passive: true });
-
-      viewportStage.addEventListener('touchend', (e) => {
-        if (isDragging && e.changedTouches.length === 1) {
-          const deltaX = e.changedTouches[0].clientX - touchStartX;
-          const deltaY = e.changedTouches[0].clientY - touchStartY;
-          const state = holeStates[currentHoleIndex];
-
-          // Trigger swipe only if not significantly zoomed in
-          if (state.zoom <= 1.2 && Math.abs(deltaX) > 50 && Math.abs(deltaX) > Math.abs(deltaY) * 1.5) {
-            if (deltaX < 0) nextHole();
-            else prevHole();
-          }
-        }
-        isDragging = false;
-        initialPinchDistance = 0;
-      }, { passive: true });
-
-      // Double tap / double click to zoom toggle
-      viewportStage.addEventListener('dblclick', (e) => {
-        if (e.target.closest('header, footer, .zoom-overlay')) return;
-        const state = holeStates[currentHoleIndex];
-        if (state.zoom > 1.2) resetView();
-        else changeZoom(1.0);
-      });
-
-      // Keyboard Controls
-      document.addEventListener('keydown', (e) => {
-        if (e.key === 'ArrowRight') nextHole();
-        if (e.key === 'ArrowLeft') prevHole();
-        if (e.key === 'r' || e.key === 'R') rotateCurrentMap();
-        if (e.key === '+' || e.key === '=') changeZoom(0.3);
-        if (e.key === '-' || e.key === '_') changeZoom(-0.3);
-        if (e.key === '0') resetView();
-        if (e.key === 'f' || e.key === 'F') toggleFitMode();
-      });
-
-      // Recalculate aspect/scale on window resize
-      window.addEventListener('resize', () => {
-        updateTransform();
-      });
-    }
-
-    // Initialize application when ready
-    window.onload = initApp;
+    initFlipbook();
   </script>
 </body>
 </html>
-```
-
-### Enhancements Included:
-1. **Maximized Viewport (No Small Cards):** Removed rigid `max-width` limitations (previously 420px). Maps now fill 100% of the screen area (`width: 100%`, `height: 100%`).
-2. **Smart 90° Rotation Auto-Scaling:** When rotating maps by 90° or 270°, the engine automatically calculates the inverse aspect ratio scale (`autoScale = Math.min(stageW / stageH, stageH / stageW)`) so rotated images scale edge-to-edge without overflowing or collapsing into tiny boxes.
-3. **Translucent Glass Floating Overlays:** Minimalist floating header and footer allow the green contour maps to take up over 90% of the screen.
-4. **Fit Mode Toggle (Contain vs Cover):** Header toggle enables switching between seeing the full map ("Contain") or stretching edge-to-edge ("Cover").
-5. **Touch & Navigation Gestures:** Touch pinch-to-zoom, drag-to-pan, swipe left/right to change holes, double-tap zoom, and keyboard shortcuts (`←`/`→`, `R`, `+`/`-`, `0`, `F`).
