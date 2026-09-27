@@ -25,7 +25,7 @@
       padding: 0;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
       -webkit-tap-highlight-color: transparent;
-      touch-action: none; /* Prevent native browser scrolling/zooming */
+      touch-action: none; /* Prevent browser native scrolling/zooming */
     }
 
     html, body {
@@ -38,17 +38,20 @@
       user-select: none;
       -webkit-user-select: none;
       position: fixed;
+      touch-action: none;
     }
 
     #app-viewport {
       position: relative;
-      width: 100%;
-      height: 100%;
+      width: 100vw;
+      height: 100vh;
+      height: 100dvh;
       overflow: hidden;
       display: flex;
       justify-content: center;
       align-items: center;
       background: radial-gradient(circle at center, #111820 0%, #050709 100%);
+      touch-action: none;
     }
 
     .stage {
@@ -60,6 +63,7 @@
       justify-content: center;
       align-items: center;
       overflow: hidden;
+      touch-action: none;
     }
 
     .map-container {
@@ -72,16 +76,16 @@
       transform-origin: center center;
       will-change: transform;
       transition: opacity 0.25s ease;
+      touch-action: none;
     }
 
     .map-container img {
-      max-width: 100%;
-      max-height: 100%;
-      width: auto;
-      height: auto;
+      width: 100%;
+      height: 100%;
       object-fit: contain;
       pointer-events: none;
       filter: drop-shadow(0 12px 30px rgba(0, 0, 0, 0.7));
+      touch-action: none;
     }
 
     header.hud-header {
@@ -339,24 +343,6 @@
       to { transform: rotate(360deg); }
     }
 
-    .toast-tip {
-      position: absolute;
-      top: max(60px, calc(env(safe-area-inset-top) + 50px));
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 45;
-      background: rgba(0, 0, 0, 0.75);
-      border: 1px solid var(--glass-border);
-      color: var(--text-muted);
-      font-size: 0.68rem;
-      font-weight: 600;
-      padding: 4px 12px;
-      border-radius: 20px;
-      pointer-events: none;
-      opacity: 0.85;
-      white-space: nowrap;
-    }
-
     .error-card {
       position: absolute;
       z-index: 20;
@@ -390,9 +376,6 @@
         <button class="icon-btn" onclick="toggleFullscreen()" title="Toggle Fullscreen">⛶</button>
       </div>
     </header>
-
-    <!-- Gesture Tip Toast -->
-    <div class="toast-tip">Pinch to Zoom • Drag to Pan • Double-Tap Zoom • Swipe to Change Hole</div>
 
     <!-- Edge-to-Edge Map Stage -->
     <main class="stage" id="stage">
@@ -636,6 +619,8 @@
       let initialPinchDist = 0;
       let initialScale = 1.0;
       let lastTapTime = 0;
+      let touchMode = 'NONE';
+      let pinchCenterX = 0, pinchCenterY = 0;
 
       // Mouse Dragging (Desktop Fallback)
       stage.addEventListener('mousedown', (e) => {
@@ -658,84 +643,115 @@
 
       window.addEventListener('mouseup', () => { isDragging = false; });
 
-      // Custom Android/iOS Multi-Touch Pinch & Pan & Swipe
+      // Native Multi-Touch Pinch, Drag, & Swipe Logic for Android/iOS
       stage.addEventListener('touchstart', (e) => {
         if (e.target.closest('header, footer, .hud-zoom-bar')) return;
 
-        // Double-Tap Zoom Toggle Detection
-        const now = Date.now();
-        if (e.touches.length === 1 && now - lastTapTime < 300) {
-          const state = holeStates[currentHoleIndex];
-          if (state.scale > 1.2) resetTransform();
-          else {
-            state.scale = 2.5;
-            renderTransform();
-          }
-          lastTapTime = 0;
-          return;
+        if (e.touches.length > 1 && e.cancelable) {
+          e.preventDefault();
         }
-        lastTapTime = now;
+
+        const state = holeStates[currentHoleIndex];
+        const now = Date.now();
 
         if (e.touches.length === 1) {
+          // Double-Tap Zoom Toggle Detection
+          if (now - lastTapTime < 300) {
+            if (state.scale > 1.2) {
+              resetTransform();
+            } else {
+              state.scale = 2.5;
+              renderTransform();
+            }
+            lastTapTime = 0;
+            touchMode = 'NONE';
+            return;
+          }
+          lastTapTime = now;
+
+          touchMode = 'PAN';
           isDragging = true;
           startX = e.touches[0].clientX;
           startY = e.touches[0].clientY;
-          const state = holeStates[currentHoleIndex];
           initialPanX = state.panX;
           initialPanY = state.panY;
+
         } else if (e.touches.length === 2) {
+          touchMode = 'PINCH';
           isDragging = false;
-          initialPinchDist = Math.hypot(
-            e.touches[0].clientX - e.touches[1].clientX,
-            e.touches[0].clientY - e.touches[1].clientY
-          );
-          initialScale = holeStates[currentHoleIndex].scale;
+
+          const t1 = e.touches[0];
+          const t2 = e.touches[1];
+
+          initialPinchDist = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+          initialScale = state.scale;
+          pinchCenterX = (t1.clientX + t2.clientX) / 2;
+          pinchCenterY = (t1.clientY + t2.clientY) / 2;
+          initialPanX = state.panX;
+          initialPanY = state.panY;
         }
       }, { passive: false });
 
       stage.addEventListener('touchmove', (e) => {
         if (e.target.closest('header, footer, .hud-zoom-bar')) return;
-        
-        // Prevent native browser zooming/scrolling on Android
         if (e.cancelable) e.preventDefault();
 
         const state = holeStates[currentHoleIndex];
 
-        if (e.touches.length === 1 && isDragging) {
+        if (e.touches.length === 1 && touchMode === 'PAN' && isDragging) {
           const deltaX = e.touches[0].clientX - startX;
           const deltaY = e.touches[0].clientY - startY;
 
-          // Pan map when zoomed in
           if (state.scale > 1.05) {
             state.panX = initialPanX + deltaX;
             state.panY = initialPanY + deltaY;
             renderTransform();
           }
-        } else if (e.touches.length === 2 && initialPinchDist > 0) {
-          const currentDist = Math.hypot(
-            e.touches[0].clientX - e.touches[1].clientX,
-            e.touches[0].clientY - e.touches[1].clientY
-          );
-          const ratio = currentDist / initialPinchDist;
-          state.scale = Math.max(1.0, Math.min(4.0, initialScale * ratio));
-          renderTransform();
+        } else if (e.touches.length === 2 && touchMode === 'PINCH' && initialPinchDist > 0) {
+          const t1 = e.touches[0];
+          const t2 = e.touches[1];
+          const currentDist = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+
+          if (currentDist > 10) {
+            const ratio = currentDist / initialPinchDist;
+            state.scale = Math.max(1.0, Math.min(5.0, initialScale * ratio));
+
+            // Pan centered on initial pinch point
+            const currentMidX = (t1.clientX + t2.clientX) / 2;
+            const currentMidY = (t1.clientY + t2.clientY) / 2;
+            state.panX = initialPanX + (currentMidX - pinchCenterX);
+            state.panY = initialPanY + (currentMidY - pinchCenterY);
+
+            renderTransform();
+          }
         }
       }, { passive: false });
 
       stage.addEventListener('touchend', (e) => {
-        if (isDragging && e.changedTouches.length === 1) {
+        const state = holeStates[currentHoleIndex];
+
+        if (touchMode === 'PAN' && isDragging && e.changedTouches.length === 1) {
           const deltaX = e.changedTouches[0].clientX - startX;
           const deltaY = e.changedTouches[0].clientY - startY;
-          const state = holeStates[currentHoleIndex];
 
-          // Single finger horizontal swipe at 1x scale changes hole
+          // Single finger swipe at 1x scale changes hole
           if (state.scale <= 1.05 && Math.abs(deltaX) > 50 && Math.abs(deltaX) > Math.abs(deltaY) * 1.5) {
             if (deltaX < 0) nextHole();
             else prevHole();
           }
         }
-        isDragging = false;
-        initialPinchDist = 0;
+
+        if (e.touches.length === 0) {
+          touchMode = 'NONE';
+          isDragging = false;
+          initialPinchDist = 0;
+        } else if (e.touches.length === 1) {
+          touchMode = 'PAN';
+          startX = e.touches[0].clientX;
+          startY = e.touches[0].clientY;
+          initialPanX = state.panX;
+          initialPanY = state.panY;
+        }
       }, { passive: true });
     }
 
