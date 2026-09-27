@@ -6,11 +6,16 @@
   <title>Donnington Grove Green Book</title>
   <style>
     :root {
-      --bg-color: #12181b;
-      --card-bg: #1e262c;
+      --bg-color: #101518;
+      --card-bg: #1a2228;
+      --card-header-bg: #151c21;
       --accent-color: #2ecc71;
+      --accent-hover: #27ae60;
+      --accent-glow: rgba(46, 204, 113, 0.25);
       --text-color: #f5f6fa;
-      --text-muted: #a4b0be;
+      --text-muted: #8e9aaf;
+      --border-color: #2a353f;
+      --shadow-color: rgba(0, 0, 0, 0.5);
     }
 
     * {
@@ -18,9 +23,10 @@
       margin: 0;
       padding: 0;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      -webkit-tap-highlight-color: transparent;
     }
 
-    /* Lock body height to dynamic mobile viewport height to prevent page scrolling */
+    /* Lock body height to dynamic mobile viewport height (100dvh) to prevent scrolling */
     html, body {
       width: 100%;
       height: 100%;
@@ -35,30 +41,48 @@
       flex-direction: column;
       align-items: center;
       justify-content: space-between;
-      padding: 10px;
+      padding: 8px 12px;
     }
 
-    /* Fixed Top Header */
     header {
       width: 100%;
-      max-width: 500px;
+      max-width: 520px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 10px 14px;
+      padding: 8px 14px;
       background: var(--card-bg);
+      border: 1px solid var(--border-color);
       border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+      box-shadow: 0 4px 15px var(--shadow-color);
       flex-shrink: 0;
+      z-index: 20;
+    }
+
+    .brand-container {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .golf-icon {
+      width: 22px;
+      height: 22px;
+      fill: var(--accent-color);
     }
 
     .title {
       font-size: 0.95rem;
       font-weight: 700;
-      color: var(--accent-color);
+      color: var(--text-color);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      letter-spacing: -0.2px;
+    }
+
+    .title span {
+      color: var(--accent-color);
     }
 
     .menu-container {
@@ -68,33 +92,35 @@
     }
 
     label {
-      font-size: 0.8rem;
+      font-size: 0.78rem;
       color: var(--text-muted);
+      font-weight: 600;
     }
 
     select {
       background-color: var(--bg-color);
-      color: var(--text-color);
-      border: 1px solid var(--accent-color);
-      padding: 6px 10px;
-      border-radius: 6px;
+      color: var(--accent-color);
+      border: 1px solid var(--border-color);
+      padding: 5px 10px;
+      border-radius: 8px;
       font-size: 0.85rem;
+      font-weight: 600;
       outline: none;
+      cursor: pointer;
     }
 
-    /* Resizable Flipbook Wrapper that dynamically fits mobile screens */
     .book-wrapper {
       position: relative;
       width: 100%;
-      max-width: 420px;
+      max-width: 480px;
       flex: 1;
-      min-height: 0; /* Crucial for flexbox resizing */
-      margin: 10px 0;
+      min-height: 0; /* Ensures flex container resizes on mobile */
+      margin: 8px 0;
       perspective: 1500px;
       display: flex;
       justify-content: center;
       align-items: center;
-      touch-action: pan-y;
+      touch-action: none; /* Managed by JS for custom gestures */
     }
 
     .flipbook {
@@ -110,13 +136,14 @@
       height: 100%;
       top: 0;
       left: 0;
-      background-color: var(--card-bg); /* Solid card background */
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-color);
       border-radius: 16px;
       overflow: hidden;
-      box-shadow: 0 8px 25px rgba(0,0,0,0.6);
+      box-shadow: 0 10px 30px var(--shadow-color);
       backface-visibility: hidden;
       transform-origin: left center;
-      transition: transform 0.5s cubic-bezier(0.4, 0.2, 0.2, 1), visibility 0.5s;
+      transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s;
       display: flex;
       flex-direction: column;
       user-select: none;
@@ -125,7 +152,7 @@
     .page.flipped {
       transform: rotateY(-180deg);
       pointer-events: none;
-      visibility: hidden;
+      opacity: 0;
     }
 
     .page.hidden-page {
@@ -138,24 +165,46 @@
       width: 100%;
       flex: 1;
       min-height: 0;
-      background: #0d1117;
+      background: #090c0e;
       display: flex;
       justify-content: center;
       align-items: center;
       overflow: hidden;
+      cursor: grab;
     }
 
-    .page-image-container img {
+    .page-image-container:active {
+      cursor: grabbing;
+    }
+
+    .map-img {
       max-width: 100%;
       max-height: 100%;
       width: auto;
       height: auto;
       object-fit: contain;
-      transition: transform 0.3s ease;
+      transition: transform 0.15s ease-out;
+      transform-origin: center center;
+      will-change: transform;
       pointer-events: none;
     }
 
-    /* Fallback UI when an image file is missing */
+    /* Image Loading Spinner */
+    .spinner {
+      position: absolute;
+      width: 36px;
+      height: 36px;
+      border: 3px solid rgba(255,255,255,0.1);
+      border-radius: 50%;
+      border-top-color: var(--accent-color);
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Fallback UI when image load fails */
     .img-placeholder {
       display: flex;
       flex-direction: column;
@@ -174,17 +223,62 @@
       fill: none;
       stroke: var(--text-muted);
       stroke-width: 1.5;
-      opacity: 0.6;
+    }
+
+    /* Floating Image Action Tools (Zoom & Rotate overlay) */
+    .image-tools-overlay {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      z-index: 10;
+      background: rgba(21, 28, 33, 0.85);
+      backdrop-filter: blur(8px);
+      padding: 5px;
+      border-radius: 10px;
+      border: 1px solid var(--border-color);
+    }
+
+    .tool-btn {
+      width: 34px;
+      height: 34px;
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      color: var(--text-color);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .tool-btn:hover, .tool-btn:active {
+      background: var(--accent-color);
+      color: #101518;
+      border-color: var(--accent-color);
+    }
+
+    .zoom-badge {
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: var(--accent-color);
+      text-align: center;
+      padding: 2px 0;
     }
 
     .page-info {
-      height: 65px;
+      height: 60px;
       flex-shrink: 0;
-      background: #161d22;
+      background: var(--card-header-bg);
       display: flex;
       justify-content: space-around;
       align-items: center;
-      border-top: 1px solid #2a353f;
+      border-top: 1px solid var(--border-color);
       padding: 0 10px;
     }
 
@@ -193,118 +287,158 @@
     }
 
     .info-label {
-      font-size: 0.68rem;
+      font-size: 0.65rem;
       color: var(--text-muted);
       text-transform: uppercase;
       letter-spacing: 1px;
+      font-weight: 600;
     }
 
     .info-value {
-      font-size: 1.1rem;
-      font-weight: bold;
+      font-size: 1.15rem;
+      font-weight: 800;
       color: var(--accent-color);
     }
 
-    /* Fixed Bottom Controls Bar */
-    .controls {
+    .controls-wrapper {
       width: 100%;
-      max-width: 500px;
+      max-width: 520px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      flex-shrink: 0;
+      z-index: 20;
+    }
+
+    .controls-main {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 8px;
-      padding: 8px 12px;
+      padding: 6px 10px;
       background: var(--card-bg);
+      border: 1px solid var(--border-color);
       border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-      flex-shrink: 0;
+      box-shadow: 0 4px 15px var(--shadow-color);
     }
 
     .btn {
       background: var(--bg-color);
       color: var(--text-color);
-      border: 1px solid #33414d;
-      padding: 8px 12px;
+      border: 1px solid var(--border-color);
+      padding: 8px 14px;
       border-radius: 8px;
       font-size: 0.85rem;
-      font-weight: 600;
+      font-weight: 700;
       cursor: pointer;
       transition: all 0.2s ease;
-      flex: 1;
-      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
       white-space: nowrap;
     }
 
-    .btn:hover, .btn:active {
+    .btn:hover:not(:disabled), .btn:active:not(:disabled) {
       background: var(--accent-color);
-      color: #12181b;
+      color: #101518;
+      border-color: var(--accent-color);
+      box-shadow: 0 0 10px var(--accent-glow);
     }
 
     .btn:disabled {
-      opacity: 0.3;
+      opacity: 0.35;
       cursor: not-allowed;
-      background: var(--bg-color);
-      color: var(--text-color);
+    }
+
+    .btn-rotate {
+      background: rgba(46, 204, 113, 0.12);
+      color: var(--accent-color);
+      border-color: rgba(46, 204, 113, 0.3);
     }
 
     .page-counter {
       font-size: 0.85rem;
       color: var(--text-muted);
-      font-weight: 600;
+      font-weight: 700;
       text-align: center;
-      padding: 0 4px;
       white-space: nowrap;
+    }
+
+    .shortcuts-hint {
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      text-align: center;
+      opacity: 0.7;
+    }
+
+    /* Helper badge for front/back 9 */
+    .nine-badge {
+      font-size: 0.65rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.08);
+      color: var(--text-muted);
+      font-weight: 600;
+      margin-left: 4px;
     }
   </style>
 </head>
 <body>
 
   <header>
-    <div class="title">Donnington Grove Green Book</div>
+    <div class="brand-container">
+      <svg class="golf-icon" viewBox="0 0 24 24">
+        <path d="M19.38 3.55a1 1 0 0 0-1.13.23l-5.63 6.18V2a1 1 0 0 0-2 0v16.17a4 4 0 1 0 2 0V11.8l5.88-6.45a1 1 0 0 0-.12-1.8zM12 21a2 2 0 1 1 2-2 2 2 0 0 1-2 2z"/>
+      </svg>
+      <div class="title">Donnington Grove <span>Green Book</span></div>
+    </div>
     <div class="menu-container">
       <label for="holeSelect">Jump:</label>
       <select id="holeSelect" onchange="jumpToHole(parseInt(this.value))">
-        <!-- Hole options dynamically generated -->
+        <!-- Dynamic options -->
       </select>
     </div>
   </header>
 
   <div class="book-wrapper" id="bookWrapper">
     <div class="flipbook" id="flipbook">
-      <!-- Pages dynamically inserted -->
+      <!-- Dynamic pages rendered by JS -->
     </div>
   </div>
 
-  <div class="controls">
-    <button class="btn" id="prevBtn" onclick="prevPage()">‹ Prev</button>
-    <span class="page-counter" id="pageCounter">Hole 1 of 18</span>
-    <button class="btn" id="nextBtn" onclick="nextPage()">Next ›</button>
-    <button class="btn" id="rotateBtn">Rotate ↻</button>
+  <div class="controls-wrapper">
+    <div class="controls-main">
+      <button class="btn" id="prevBtn" onclick="prevPage()">‹ Prev</button>
+      <div class="page-counter" id="pageCounter">Hole 1 of 18</div>
+      <button class="btn" id="nextBtn" onclick="nextPage()">Next ›</button>
+      <button class="btn btn-rotate" id="rotateBtn" onclick="rotateCurrentImage()" title="Rotate 90 degrees">Rotate ↻</button>
+    </div>
+    <div class="shortcuts-hint">
+      Swipe or use Keyboard [← / →] Navigate • [R] Rotate • [+ / -] Zoom • Drag to Pan
+    </div>
   </div>
 
   <script>
     const holeData = [
-      // Front 9 (Update image file names as needed)
-      { hole: 1,  par: 4, hdcp: 10, image: 'hole1.jpg', rotation: 0 },
-      { hole: 2,  par: 4, hdcp: 4,  image: 'hole2.jpg', rotation: 0 },
-      { hole: 3,  par: 3, hdcp: 16, image: 'hole3.jpg', rotation: 0 },
-      { hole: 4,  par: 5, hdcp: 2,  image: 'hole4.jpg', rotation: 0 },
-      { hole: 5,  par: 4, hdcp: 8,  image: 'hole5.jpg', rotation: 0 },
-      { hole: 6,  par: 3, hdcp: 18, image: 'hole6.jpg', rotation: 0 },
-      { hole: 7,  par: 4, hdcp: 12, image: 'hole7.jpg', rotation: 0 },
-      { hole: 8,  par: 5, hdcp: 6,  image: 'hole8.jpg', rotation: 0 },
-
-      // Back 9 Data
-      { hole: 9,  par: 4, hdcp: 14, image: 'd6c0f1f1-09e5-4ee1-af2e-25ca16731298-1_all_23241.jpg', rotation: 0 },
-      { hole: 10, par: 5, hdcp: 5,  image: 'd6c0f1f1-09e5-4ee1-af2e-25ca16731298-1_all_23244.jpg', rotation: 0 },
-      { hole: 11, par: 4, hdcp: 1,  image: 'd6c0f1f1-09e5-4ee1-af2e-25ca16731298-1_all_23245.jpg', rotation: 0 },
-      { hole: 12, par: 4, hdcp: 13, image: 'd6c0f1f1-09e5-4ee1-af2e-25ca16731298-1_all_23246.jpg', rotation: 0 },
-      { hole: 13, par: 5, hdcp: 7,  image: 'd6c0f1f1-09e5-4ee1-af2e-25ca16731298-1_all_23247.jpg', rotation: 0 },
-      { hole: 14, par: 4, hdcp: 17, image: 'd6c0f1f1-09e5-4ee1-af2e-25ca16731298-1_all_23248.jpg', rotation: 0 },
-      { hole: 15, par: 3, hdcp: 15, image: 'd6c0f1f1-09e5-4ee1-af2e-25ca16731298-1_all_23249.jpg', rotation: 0 },
-      { hole: 16, par: 4, hdcp: 3,  image: 'd6c0f1f1-09e5-4ee1-af2e-25ca16731298-1_all_23250.jpg', rotation: 0 },
-      { hole: 17, par: 3, hdcp: 9,  image: 'd6c0f1f1-09e5-4ee1-af2e-25ca16731298-1_all_23251.jpg', rotation: 0 },
-      { hole: 18, par: 4, hdcp: 11, image: 'd6c0f1f1-09e5-4ee1-af2e-25ca16731298-1_all_23252.jpg', rotation: 0 }
+      { hole: 1,  par: 4, hdcp: 10, image: 'https://i.postimg.cc/CZxdvR77/DG1.jpg', rotation: 0, zoom: 1, panX: 0, panY: 0 },
+      { hole: 2,  par: 4, hdcp: 4,  image: 'https://i.postimg.cc/xkp8B9pH/DG2.jpg', rotation: 0, zoom: 1, panX: 0, panY: 0 },
+      { hole: 3,  par: 3, hdcp: 16, image: 'https://i.postimg.cc/Y4CjXvRb/DG3.jpg', rotation: 0, zoom: 1, panX: 0, panY: 0 },
+      { hole: 4,  par: 5, hdcp: 2,  image: 'https://i.postimg.cc/Lq8hyJDv/DG4.jpg', rotation: 0, zoom: 1, panX: 0, panY: 0 },
+      { hole: 5,  par: 4, hdcp: 8,  image: 'https://i.postimg.cc/5HKyDfK8/DG5.jpg', rotation: 0, zoom: 1, panX: 0, panY: 0 },
+      { hole: 6,  par: 3, hdcp: 18, image: 'https://i.postimg.cc/B87bRJ7T/DG6.jpg', rotation: 0, zoom: 1, panX: 0, panY: 0 },
+      { hole: 7,  par: 4, hdcp: 12, image: 'https://i.postimg.cc/zL2v4q2S/DG7.jpg', rotation: 0, zoom: 1, panX: 0, panY: 0 },
+      { hole: 8,  par: 5, hdcp: 6,  image: 'https://i.postimg.cc/wt4Mn94Q/DG8.jpg', rotation: 0, zoom: 1, panX: 0, panY: 0 },
+      { hole: 9,  par: 4, hdcp: 14, image: 'https://i.postimg.cc/mcpkKTpj/DG9.jpg', rotation: 0, zoom: 1, panX: 0, panY: 0 },
+      { hole: 10, par: 5, hdcp: 5,  image: 'https://i.postimg.cc/TyN1BTNC/DG10.jpg', rotation: 0, zoom: 1, panX: 0, panY: 0 },
+      { hole: 11, par: 4, hdcp: 1,  image: 'https://i.postimg.cc/94g0scgx/DG11.jpg', rotation: 0, zoom: 1, panX: 0, panY: 0 },
+      { hole: 12, par: 4, hdcp: 13, image: 'https://i.postimg.cc/8FXcxTXK/DG12.jpg', rotation: 0, zoom: 1, panX: 0, panY: 0 },
+      { hole: 13, par: 5, hdcp: 7,  image: 'https://i.postimg.cc/94g0scgk/DG13.jpg', rotation: 0, zoom: 1, panX: 0, panY: 0 },
+      { hole: 14, par: 4, hdcp: 17, image: 'https://i.postimg.cc/Y4D0TtDV/DG14.jpg', rotation: 0, zoom: 1, panX: 0, panY: 0 },
+      { hole: 15, par: 3, hdcp: 15, image: 'https://i.postimg.cc/NyCFZQCS/DG15.jpg', rotation: 0, zoom: 1, panX: 0, panY: 0 },
+      { hole: 16, par: 4, hdcp: 3,  image: 'https://i.postimg.cc/FfCzwhCw/DG16.jpg', rotation: 0, zoom: 1, panX: 0, panY: 0 },
+      { hole: 17, par: 3, hdcp: 9,  image: 'https://i.postimg.cc/v12TCG2p/DG17.jpg', rotation: 0, zoom: 1, panX: 0, panY: 0 },
+      { hole: 18, par: 4, hdcp: 11, image: 'https://i.postimg.cc/xkp8B9FD/DG18.jpg', rotation: 0, zoom: 1, panX: 0, panY: 0 }
     ];
 
     let currentIndex = 0;
@@ -314,14 +448,19 @@
     const pageCounter = document.getElementById('pageCounter');
     const prevBtn = document.getElementById('prevBtn');
     const nextBtn = document.getElementById('nextBtn');
-    const rotateBtn = document.getElementById('rotateBtn');
+
+    function handleImageLoad(img) {
+      const spinner = img.parentElement.querySelector('.spinner');
+      if (spinner) spinner.remove();
+      img.style.opacity = '1';
+    }
 
     function handleImageError(img, holeNum) {
       const container = img.parentElement;
       container.innerHTML = `
         <div class="img-placeholder">
           <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
-          <div>Map for <b>Hole ${holeNum}</b> not found.<br><span style="font-size:0.75rem;">Upload picture to GitHub repository.</span></div>
+          <div>Map for <b>Hole ${holeNum}</b> failed to load.</div>
         </div>
       `;
     }
@@ -331,25 +470,36 @@
       selectMenu.innerHTML = '';
 
       holeData.forEach((item, index) => {
-        // Dropdown option
+        // Select options
         const option = document.createElement('option');
         option.value = index;
         option.textContent = `Hole ${item.hole}`;
         selectMenu.appendChild(option);
 
-        // Page DOM element
+        // Card DOM
         const page = document.createElement('div');
         page.className = 'page';
         page.id = `page-${index}`;
         page.style.zIndex = holeData.length - index;
 
+        const nineLabel = item.hole <= 9 ? 'Front 9' : 'Back 9';
+
         page.innerHTML = `
-          <div class="page-image-container">
-            <img src="${item.image}" alt="Hole ${item.hole}" onerror="handleImageError(this, ${item.hole})">
+          <div class="page-image-container" id="container-${index}">
+            <div class="spinner"></div>
+            <img class="map-img" id="img-${index}" src="${item.image}" alt="Hole ${item.hole} Contour Map" 
+                 onload="handleImageLoad(this)" onerror="handleImageError(this, ${item.hole})">
+            
+            <div class="image-tools-overlay">
+              <button class="tool-btn" onclick="adjustZoom(${index}, 0.25)" title="Zoom In">+</button>
+              <div class="zoom-badge" id="zoom-badge-${index}">1.0x</div>
+              <button class="tool-btn" onclick="adjustZoom(${index}, -0.25)" title="Zoom Out">-</button>
+              <button class="tool-btn" onclick="resetZoomAndPan(${index})" title="Reset View">1x</button>
+            </div>
           </div>
           <div class="page-info">
             <div class="info-box">
-              <div class="info-label">Hole</div>
+              <div class="info-label">Hole <span class="nine-badge">${nineLabel}</span></div>
               <div class="info-value">${item.hole}</div>
             </div>
             <div class="info-box">
@@ -363,6 +513,8 @@
           </div>
         `;
         flipbook.appendChild(page);
+
+        setupPanAndZoomEvents(index);
       });
 
       updateUI();
@@ -376,13 +528,8 @@
 
       holeData.forEach((item, index) => {
         const page = document.getElementById(`page-${index}`);
-        const imgElement = page.querySelector('.page-image-container img');
-        
-        if (imgElement) {
-          imgElement.style.transform = `rotate(${item.rotation}deg)`;
-        }
+        applyTransform(index);
 
-        // Hide inactive background pages to prevent DOM bleed/overlapping glitches
         if (index < currentIndex) {
           page.classList.add('flipped');
           page.classList.remove('hidden-page');
@@ -394,6 +541,16 @@
           page.classList.add('hidden-page');
         }
       });
+    }
+
+    function applyTransform(index) {
+      const img = document.getElementById(`img-${index}`);
+      const badge = document.getElementById(`zoom-badge-${index}`);
+      if (!img) return;
+
+      const item = holeData[index];
+      img.style.transform = `translate(${item.panX}px, ${item.panY}px) rotate(${item.rotation}deg) scale(${item.zoom})`;
+      if (badge) badge.textContent = `${item.zoom.toFixed(1)}x`;
     }
 
     function nextPage() {
@@ -416,40 +573,138 @@
     }
 
     function rotateCurrentImage() {
-      const pageData = holeData[currentIndex];
-      pageData.rotation = (pageData.rotation + 90) % 360;
-
-      const imgElement = document.getElementById(`page-${currentIndex}`).querySelector('.page-image-container img');
-      if (imgElement) {
-        imgElement.style.transform = `rotate(${pageData.rotation}deg)`;
-      }
+      const item = holeData[currentIndex];
+      item.rotation = (item.rotation + 90) % 360;
+      applyTransform(currentIndex);
     }
 
-    rotateBtn.addEventListener('click', rotateCurrentImage);
+    function adjustZoom(index, delta) {
+      const item = holeData[index];
+      const newZoom = Math.max(1.0, Math.min(3.5, item.zoom + delta));
+      item.zoom = newZoom;
+      if (newZoom === 1.0) {
+        item.panX = 0;
+        item.panY = 0;
+      }
+      applyTransform(index);
+    }
 
-    // Keyboard support
+    function resetZoomAndPan(index) {
+      const item = holeData[index];
+      item.zoom = 1.0;
+      item.panX = 0;
+      item.panY = 0;
+      applyTransform(index);
+    }
+
+    function setupPanAndZoomEvents(index) {
+      const container = document.getElementById(`container-${index}`);
+      let isDragging = false;
+      let startX = 0, startY = 0;
+      let initialPanX = 0, initialPanY = 0;
+
+      // Mouse Panning
+      container.addEventListener('mousedown', (e) => {
+        if (e.target.closest('.image-tools-overlay')) return;
+        const item = holeData[index];
+        if (item.zoom > 1.0) {
+          isDragging = true;
+          startX = e.clientX;
+          startY = e.clientY;
+          initialPanX = item.panX;
+          initialPanY = item.panY;
+        }
+      });
+
+      window.addEventListener('mousemove', (e) => {
+        if (!isDragging || index !== currentIndex) return;
+        const item = holeData[index];
+        item.panX = initialPanX + (e.clientX - startX);
+        item.panY = initialPanY + (e.clientY - startY);
+        applyTransform(index);
+      });
+
+      window.addEventListener('mouseup', () => {
+        isDragging = false;
+      });
+
+      // Double-click to toggle zoom
+      container.addEventListener('dblclick', (e) => {
+        if (e.target.closest('.image-tools-overlay')) return;
+        const item = holeData[index];
+        if (item.zoom > 1.0) {
+          resetZoomAndPan(index);
+        } else {
+          adjustZoom(index, 1.0);
+        }
+      });
+    }
+
+    // Touch Swipe Navigation and Drag-Pan Gestures
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let isTouchPanning = false;
+    let touchInitialPanX = 0;
+    let touchInitialPanY = 0;
+
+    bookWrapper.addEventListener('touchstart', (e) => {
+      if (e.target.closest('.image-tools-overlay')) return;
+      const touch = e.touches[0];
+      touchStartX = touch.clientX;
+      touchStartY = touch.clientY;
+
+      const item = holeData[currentIndex];
+      if (item.zoom > 1.0) {
+        isTouchPanning = true;
+        touchInitialPanX = item.panX;
+        touchInitialPanY = item.panY;
+      } else {
+        isTouchPanning = false;
+      }
+    }, { passive: true });
+
+    bookWrapper.addEventListener('touchmove', (e) => {
+      if (e.touches.length === 1 && isTouchPanning) {
+        const touch = e.touches[0];
+        const deltaX = touch.clientX - touchStartX;
+        const deltaY = touch.clientY - touchStartY;
+        const item = holeData[currentIndex];
+        item.panX = touchInitialPanX + deltaX;
+        item.panY = touchInitialPanY + deltaY;
+        applyTransform(currentIndex);
+      }
+    }, { passive: true });
+
+    bookWrapper.addEventListener('touchend', (e) => {
+      if (isTouchPanning) {
+        isTouchPanning = false;
+        return;
+      }
+
+      const touch = e.changedTouches[0];
+      const deltaX = touch.clientX - touchStartX;
+      const deltaY = touch.clientY - touchStartY;
+
+      // Ensure horizontal swipe is dominant and above threshold
+      if (Math.abs(deltaX) > 40 && Math.abs(deltaX) > Math.abs(deltaY)) {
+        if (deltaX < 0) {
+          nextPage();
+        } else {
+          prevPage();
+        }
+      }
+    }, { passive: true });
+
     document.addEventListener('keydown', (e) => {
       if (e.key === 'ArrowRight') nextPage();
       if (e.key === 'ArrowLeft') prevPage();
       if (e.key === 'r' || e.key === 'R') rotateCurrentImage();
+      if (e.key === '+' || e.key === '=') adjustZoom(currentIndex, 0.25);
+      if (e.key === '-' || e.key === '_') adjustZoom(currentIndex, -0.25);
+      if (e.key === '0') resetZoomAndPan(currentIndex);
     });
 
-    // Touch Swipe Gestures
-    let touchStartX = 0;
-    let touchEndX = 0;
-
-    bookWrapper.addEventListener('touchstart', (e) => {
-      touchStartX = e.changedTouches[0].screenX;
-    }, { passive: true });
-
-    bookWrapper.addEventListener('touchend', (e) => {
-      touchEndX = e.changedTouches[0].screenX;
-      if (Math.abs(touchEndX - touchStartX) >= 40) {
-        if (touchEndX < touchStartX) nextPage();
-        else prevPage();
-      }
-    }, { passive: true });
-
+    // Initialize application on load
     initFlipbook();
   </script>
 </body>
