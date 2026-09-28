@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Donnington Grove Green Book</title>
+  <title>Golf Green Book</title>
   
   <style>
     :root {
       --bg-dark: #070a0d;
-      --glass-bg: rgba(14, 20, 26, 0.78);
-      --glass-border: rgba(255, 255, 255, 0.12);
+      --glass-bg: rgba(14, 20, 26, 0.82);
+      --glass-border: rgba(255, 255, 255, 0.14);
       --accent: #2ecc71;
       --accent-glow: rgba(46, 204, 113, 0.35);
       --text-main: #f8fafc;
@@ -25,7 +25,7 @@
       padding: 0;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
       -webkit-tap-highlight-color: transparent;
-      touch-action: none; /* Prevent browser native scrolling/zooming */
+      touch-action: none;
     }
 
     html, body {
@@ -84,7 +84,7 @@
       height: 100%;
       object-fit: contain;
       pointer-events: none;
-      filter: drop-shadow(0 12px 30px rgba(0, 0, 0, 0.7));
+      filter: drop-shadow(0 12px 30px rgba(0, 0, 0, 0.75));
       touch-action: none;
     }
 
@@ -105,54 +105,49 @@
       border-radius: 14px;
       box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
       pointer-events: auto;
-    }
-
-    .brand {
-      display: flex;
-      align-items: center;
       gap: 8px;
-    }
-
-    .brand-logo {
-      width: 22px;
-      height: 22px;
-      fill: var(--accent);
-    }
-
-    .brand-title {
-      font-size: 0.95rem;
-      font-weight: 800;
-      letter-spacing: -0.3px;
-    }
-
-    .brand-title span {
-      color: var(--accent);
     }
 
     .header-controls {
       display: flex;
       align-items: center;
       gap: 8px;
+      width: 100%;
+      justify-content: space-between;
     }
 
-    select.hole-picker {
-      background: rgba(0, 0, 0, 0.5);
+    .select-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: nowrap;
+    }
+
+    select.hud-select {
+      background: rgba(0, 0, 0, 0.6);
       color: var(--accent);
       border: 1px solid var(--glass-border);
-      padding: 6px 12px;
+      padding: 6px 10px;
       border-radius: 8px;
       font-size: 0.85rem;
       font-weight: 700;
       outline: none;
       cursor: pointer;
+      max-width: 170px;
+      text-overflow: ellipsis;
+    }
+
+    select.hud-select option {
+      background: #0f172a;
+      color: #fff;
     }
 
     .icon-btn {
       background: rgba(255, 255, 255, 0.08);
       border: 1px solid var(--glass-border);
       color: var(--text-main);
-      min-width: 38px;
-      height: 38px;
+      min-width: 36px;
+      height: 36px;
       border-radius: 10px;
       display: flex;
       align-items: center;
@@ -161,6 +156,7 @@
       cursor: pointer;
       transition: all 0.2s ease;
       font-size: 0.9rem;
+      flex-shrink: 0;
     }
 
     .icon-btn:active {
@@ -294,7 +290,6 @@
       text-transform: uppercase;
     }
 
-    /* Tee Yardages Row */
     .tees-row {
       display: flex;
       align-items: center;
@@ -363,16 +358,16 @@
 
   <div id="app-viewport">
     
-    <!-- Floating Header HUD -->
+    <!-- Floating Header HUD with Course & Hole Selectors -->
     <header class="hud-header">
-      <div class="brand">
-        <svg class="brand-logo" viewBox="0 0 24 24">
-          <path d="M19.38 3.55a1 1 0 0 0-1.13.23l-5.63 6.18V2a1 1 0 0 0-2 0v16.17a4 4 0 1 0 2 0V11.8l5.88-6.45a1 1 0 0 0-.12-1.8zM12 21a2 2 0 1 1 2-2 2 2 0 0 1-2 2z"/>
-        </svg>
-        <div class="brand-title">DG <span>Green Book</span></div>
-      </div>
       <div class="header-controls">
-        <select class="hole-picker" id="holePicker" onchange="jumpToHole(parseInt(this.value))"></select>
+        <div class="select-group">
+          <select class="hud-select" id="courseSelect" onchange="changeCourse(this.value)">
+            <option value="donnington">Donnington Grove</option>
+            <option value="ogbourne">Ogbourne Downs</option>
+          </select>
+          <select class="hud-select" id="holeSelect" onchange="jumpToHole(parseInt(this.value))"></select>
+        </div>
         <button class="icon-btn" onclick="toggleFullscreen()" title="Toggle Fullscreen">⛶</button>
       </div>
     </header>
@@ -445,48 +440,83 @@
   </div>
 
   <script>
-    // Exact official Donnington Grove 18-Hole Scorecard Data and verified Direct Image URLs
-    const holeData = [
-      { hole: 1,  par: 4, si: 10, white: 381, yellow: 373, red: 332, img: 'https://i.postimg.cc/FKjcHcJM/DG1.jpg' },
-      { hole: 2,  par: 5, si: 8,  white: 583, yellow: 511, red: 487, img: 'https://i.postimg.cc/XJ45GJw2/DG2.jpg' },
-      { hole: 3,  par: 4, si: 12, white: 411, yellow: 389, red: 348, img: 'https://i.postimg.cc/xdKH1HzD/DG3.jpg' },
-      { hole: 4,  par: 4, si: 2,  white: 444, yellow: 422, red: 355, img: 'https://i.postimg.cc/BvxDnDKW/DG4.jpg' },
-      { hole: 5,  par: 3, si: 16, white: 198, yellow: 168, red: 141, img: 'https://i.postimg.cc/V6mtr6jZ/DG5.jpg' },
-      { hole: 6,  par: 5, si: 6,  white: 559, yellow: 550, red: 438, img: 'https://i.postimg.cc/76wzG6gW/DG6.jpg' },
-      { hole: 7,  par: 3, si: 18, white: 188, yellow: 155, red: 118, img: 'https://i.postimg.cc/hjcmzj9w/DG7.jpg' },
-      { hole: 8,  par: 4, si: 4,  white: 463, yellow: 441, red: 391, img: 'https://i.postimg.cc/qR4KhR8S/DG8.jpg' },
-      { hole: 9,  par: 4, si: 14, white: 329, yellow: 317, red: 289, img: 'https://i.postimg.cc/qR4KhR8P/DG9.jpg' },
-      { hole: 10, par: 5, si: 5,  white: 624, yellow: 567, red: 498, img: 'https://i.postimg.cc/1tsFntGh/DG10.jpg' },
-      { hole: 11, par: 4, si: 1,  white: 423, yellow: 382, red: 333, img: 'https://i.postimg.cc/FRNSdRyQ/DG11.jpg' },
-      { hole: 12, par: 4, si: 13, white: 378, yellow: 366, red: 338, img: 'https://i.postimg.cc/cH03gHRS/DG12.jpg' },
-      { hole: 13, par: 5, si: 7,  white: 523, yellow: 502, red: 481, img: 'https://i.postimg.cc/4dsc7d6X/DG13.jpg' },
-      { hole: 14, par: 4, si: 17, white: 368, yellow: 310, red: 270, img: 'https://i.postimg.cc/d1wCk12q/DG14.jpg' },
-      { hole: 15, par: 3, si: 15, white: 179, yellow: 161, red: 114, img: 'https://i.postimg.cc/ydsRgdm1/DG15.jpg' },
-      { hole: 16, par: 4, si: 3,  white: 427, yellow: 405, red: 376, img: 'https://i.postimg.cc/gJmhXJVc/DG16.jpg' },
-      { hole: 17, par: 3, si: 9,  white: 210, yellow: 186, red: 165, img: 'https://i.postimg.cc/50bzY0BN/DG17.jpg' },
-      { hole: 18, par: 4, si: 11, white: 420, yellow: 371, red: 361, img: 'https://i.postimg.cc/PxTDpxWx/DG18.jpg' }
-    ];
+    const coursesData = {
+      donnington: {
+        name: 'Donnington Grove',
+        holes: [
+          { hole: 1,  par: 4, si: 10, white: 381, yellow: 373, red: 332, img: 'https://i.postimg.cc/FKjcHcJM/DG1.jpg' },
+          { hole: 2,  par: 5, si: 8,  white: 583, yellow: 511, red: 487, img: 'https://i.postimg.cc/XJ45GJw2/DG2.jpg' },
+          { hole: 3,  par: 4, si: 12, white: 411, yellow: 389, red: 348, img: 'https://i.postimg.cc/xdKH1HzD/DG3.jpg' },
+          { hole: 4,  par: 4, si: 2,  white: 444, yellow: 422, red: 355, img: 'https://i.postimg.cc/BvxDnDKW/DG4.jpg' },
+          { hole: 5,  par: 3, si: 16, white: 198, yellow: 168, red: 141, img: 'https://i.postimg.cc/V6mtr6jZ/DG5.jpg' },
+          { hole: 6,  par: 5, si: 6,  white: 559, yellow: 550, red: 438, img: 'https://i.postimg.cc/76wzG6gW/DG6.jpg' },
+          { hole: 7,  par: 3, si: 18, white: 188, yellow: 155, red: 118, img: 'https://i.postimg.cc/hjcmzj9w/DG7.jpg' },
+          { hole: 8,  par: 4, si: 4,  white: 463, yellow: 441, red: 391, img: 'https://i.postimg.cc/qR4KhR8S/DG8.jpg' },
+          { hole: 9,  par: 4, si: 14, white: 329, yellow: 317, red: 289, img: 'https://i.postimg.cc/qR4KhR8P/DG9.jpg' },
+          { hole: 10, par: 5, si: 5,  white: 624, yellow: 567, red: 498, img: 'https://i.postimg.cc/1tsFntGh/DG10.jpg' },
+          { hole: 11, par: 4, si: 1,  white: 423, yellow: 382, red: 333, img: 'https://i.postimg.cc/FRNSdRyQ/DG11.jpg' },
+          { hole: 12, par: 4, si: 13, white: 378, yellow: 366, red: 338, img: 'https://i.postimg.cc/cH03gHRS/DG12.jpg' },
+          { hole: 13, par: 5, si: 7,  white: 523, yellow: 502, red: 481, img: 'https://i.postimg.cc/4dsc7d6X/DG13.jpg' },
+          { hole: 14, par: 4, si: 17, white: 368, yellow: 310, red: 270, img: 'https://i.postimg.cc/d1wCk12q/DG14.jpg' },
+          { hole: 15, par: 3, si: 15, white: 179, yellow: 161, red: 114, img: 'https://i.postimg.cc/ydsRgdm1/DG15.jpg' },
+          { hole: 16, par: 4, si: 3,  white: 427, yellow: 405, red: 376, img: 'https://i.postimg.cc/gJmhXJVc/DG16.jpg' },
+          { hole: 17, par: 3, si: 9,  white: 210, yellow: 186, red: 165, img: 'https://i.postimg.cc/50bzY0BN/DG17.jpg' },
+          { hole: 18, par: 4, si: 11, white: 420, yellow: 371, red: 361, img: 'https://i.postimg.cc/PxTDpxWx/DG18.jpg' }
+        ]
+      },
+      ogbourne: {
+        name: 'Ogbourne Downs',
+        holes: [
+          { hole: 1,  par: 4, si: 8,  white: 326, yellow: 314, red: 307, img: 'https://i.postimg.cc/j52txCc7/og1.jpg' },
+          { hole: 2,  par: 4, si: 2,  white: 394, yellow: 379, red: 336, img: 'https://i.postimg.cc/D0bhGDtV/og2.jpg' },
+          { hole: 3,  par: 4, si: 16, white: 313, yellow: 294, red: 288, img: 'https://i.postimg.cc/FzJvSqw2/og3.jpg' },
+          { hole: 4,  par: 3, si: 10, white: 172, yellow: 154, red: 141, img: 'https://i.postimg.cc/5yFJzGDR/og4.jpg' },
+          { hole: 5,  par: 4, si: 4,  white: 429, yellow: 424, red: 424, img: 'https://i.postimg.cc/8crGv3xy/og5.jpg' },
+          { hole: 6,  par: 4, si: 18, white: 291, yellow: 281, red: 273, img: 'https://i.postimg.cc/zBQ5V52M/og6.jpg' },
+          { hole: 7,  par: 4, si: 14, white: 315, yellow: 304, red: 294, img: 'https://i.postimg.cc/TwsGpGH8/og7.jpg' },
+          { hole: 8,  par: 3, si: 6,  white: 203, yellow: 174, red: 145, img: 'https://i.postimg.cc/j51KLK3v/og8.jpg' },
+          { hole: 9,  par: 5, si: 12, white: 562, yellow: 548, red: 536, img: 'https://i.postimg.cc/HxNHVHvz/og9.jpg' },
+          { hole: 10, par: 5, si: 7,  white: 539, yellow: 489, red: 415, img: 'https://i.postimg.cc/3Rq7d7fF/og10.jpg' },
+          { hole: 11, par: 4, si: 11, white: 341, yellow: 328, red: 304, img: 'https://i.postimg.cc/xCZYcYpL/og11.jpg' },
+          { hole: 12, par: 4, si: 17, white: 336, yellow: 325, red: 312, img: 'https://i.postimg.cc/zBQ5V52R/og12.jpg' },
+          { hole: 13, par: 4, si: 1,  white: 427, yellow: 418, red: 359, img: 'https://i.postimg.cc/QtzsHsYK/og13.jpg' },
+          { hole: 14, par: 5, si: 3,  white: 553, yellow: 528, red: 462, img: 'https://i.postimg.cc/50r161KY/og14.jpg' },
+          { hole: 15, par: 3, si: 9,  white: 202, yellow: 186, red: 141, img: 'https://i.postimg.cc/V6vmf5gB/og15.jpg' },
+          { hole: 16, par: 4, si: 13, white: 370, yellow: 361, red: 335, img: 'https://i.postimg.cc/50yb4jgF/og16.jpg' },
+          { hole: 17, par: 3, si: 15, white: 119, yellow: 117, red: 111, img: 'https://i.postimg.cc/85cNps4f/og17.jpg' },
+          { hole: 18, par: 4, si: 5,  white: 439, yellow: 416, red: 361, img: 'https://i.postimg.cc/pTrRWyC8/og18.jpg' }
+        ]
+      }
+    };
 
-    // State Management
+    let currentCourseKey = 'donnington';
     let currentHoleIndex = 0;
-    const holeStates = holeData.map(() => ({
+
+    // Track state per course & hole index
+    const createCourseTransformState = () => Array.from({ length: 18 }, () => ({
       rotation: 0,
       scale: 1.0,
       panX: 0,
       panY: 0
     }));
 
+    const transformStates = {
+      donnington: createCourseTransformState(),
+      ogbourne: createCourseTransformState()
+    };
+
     // DOM Elements
     const stage = document.getElementById('stage');
     const mapContainer = document.getElementById('mapContainer');
     const mapImg = document.getElementById('mapImg');
     const loadingSpinner = document.getElementById('loadingSpinner');
-    const holePicker = document.getElementById('holePicker');
+    const courseSelect = document.getElementById('courseSelect');
+    const holeSelect = document.getElementById('holeSelect');
     const zoomVal = document.getElementById('zoomVal');
     const prevBtn = document.getElementById('prevBtn');
     const nextBtn = document.getElementById('nextBtn');
     
-    // Scorecard DOM
+    // Scorecard HUD
     const holeNum = document.getElementById('holeNum');
     const parNum = document.getElementById('parNum');
     const siNum = document.getElementById('siNum');
@@ -496,10 +526,8 @@
     const redYards = document.getElementById('redYards');
 
     function initApp() {
-      // Populate Dropdown
-      holePicker.innerHTML = holeData.map((h, i) => `<option value="${i}">Hole ${h.hole}</option>`).join('');
+      courseSelect.value = currentCourseKey;
 
-      // Image loading handlers
       mapImg.onload = () => {
         loadingSpinner.style.display = 'none';
         mapContainer.style.opacity = '1';
@@ -512,29 +540,45 @@
         errCard.className = 'error-card';
         errCard.id = 'errCard';
         errCard.innerHTML = `
-          <div>Failed to load Hole ${holeData[currentHoleIndex].hole} green map.</div>
+          <div>Failed to load green map.</div>
           <button class="nav-btn" onclick="loadHole(${currentHoleIndex})">Retry</button>
         `;
         stage.appendChild(errCard);
       };
 
+      populateHoleDropdown();
       loadHole(0);
       bindTouchAndGestureListeners();
       bindKeyboardShortcuts();
+    }
+
+    function populateHoleDropdown() {
+      const holes = coursesData[currentCourseKey].holes;
+      holeSelect.innerHTML = holes.map((h, i) => `<option value="${i}">Hole ${h.hole}</option>`).join('');
+    }
+
+    function changeCourse(courseKey) {
+      if (coursesData[courseKey]) {
+        currentCourseKey = courseKey;
+        currentHoleIndex = 0;
+        populateHoleDropdown();
+        loadHole(0);
+      }
     }
 
     function loadHole(index) {
       const errCard = document.getElementById('errCard');
       if (errCard) errCard.remove();
 
+      const course = coursesData[currentCourseKey];
       currentHoleIndex = index;
-      const data = holeData[index];
+      const data = course.holes[index];
 
       mapContainer.style.opacity = '0';
       loadingSpinner.style.display = 'block';
 
       // Update Header & Ribbon HUD
-      holePicker.value = index;
+      holeSelect.value = index;
       holeNum.textContent = data.hole;
       parNum.textContent = data.par;
       siNum.textContent = data.si;
@@ -544,20 +588,18 @@
       redYards.textContent = `${data.red}y`;
 
       prevBtn.disabled = index === 0;
-      nextBtn.disabled = index === holeData.length - 1;
+      nextBtn.disabled = index === course.holes.length - 1;
 
       mapImg.src = data.img;
       renderTransform();
     }
 
     function renderTransform() {
-      const state = holeStates[currentHoleIndex];
+      const state = transformStates[currentCourseKey][currentHoleIndex];
       const stageRect = stage.getBoundingClientRect();
       const sW = stageRect.width || window.innerWidth;
       const sH = stageRect.height || window.innerHeight;
 
-      // Smart rotation aspect autoScale logic:
-      // When rotated by 90deg or 270deg, inverse scale ensures full edge-to-edge fitting without clipping
       let autoScale = 1.0;
       if (state.rotation % 180 !== 0) {
         autoScale = Math.min(sW / sH, sH / sW);
@@ -569,8 +611,8 @@
     }
 
     function modifyZoom(delta) {
-      const state = holeStates[currentHoleIndex];
-      state.scale = Math.max(1.0, Math.min(4.0, state.scale + delta));
+      const state = transformStates[currentCourseKey][currentHoleIndex];
+      state.scale = Math.max(1.0, Math.min(5.0, state.scale + delta));
       if (state.scale === 1.0) {
         state.panX = 0;
         state.panY = 0;
@@ -579,7 +621,7 @@
     }
 
     function resetTransform() {
-      const state = holeStates[currentHoleIndex];
+      const state = transformStates[currentCourseKey][currentHoleIndex];
       state.scale = 1.0;
       state.panX = 0;
       state.panY = 0;
@@ -587,13 +629,14 @@
     }
 
     function rotateMap() {
-      const state = holeStates[currentHoleIndex];
+      const state = transformStates[currentCourseKey][currentHoleIndex];
       state.rotation = (state.rotation + 90) % 360;
       renderTransform();
     }
 
     function jumpToHole(index) {
-      if (index >= 0 && index < holeData.length) loadHole(index);
+      const holes = coursesData[currentCourseKey].holes;
+      if (index >= 0 && index < holes.length) loadHole(index);
     }
 
     function prevHole() {
@@ -601,7 +644,8 @@
     }
 
     function nextHole() {
-      if (currentHoleIndex < holeData.length - 1) loadHole(currentHoleIndex + 1);
+      const holes = coursesData[currentCourseKey].holes;
+      if (currentHoleIndex < holes.length - 1) loadHole(currentHoleIndex + 1);
     }
 
     function toggleFullscreen() {
@@ -622,10 +666,10 @@
       let touchMode = 'NONE';
       let pinchCenterX = 0, pinchCenterY = 0;
 
-      // Mouse Dragging (Desktop Fallback)
+      // Mouse dragging for desktop viewports
       stage.addEventListener('mousedown', (e) => {
         if (e.target.closest('header, footer, .hud-zoom-bar')) return;
-        const state = holeStates[currentHoleIndex];
+        const state = transformStates[currentCourseKey][currentHoleIndex];
         isDragging = true;
         startX = e.clientX;
         startY = e.clientY;
@@ -635,7 +679,7 @@
 
       window.addEventListener('mousemove', (e) => {
         if (!isDragging) return;
-        const state = holeStates[currentHoleIndex];
+        const state = transformStates[currentCourseKey][currentHoleIndex];
         state.panX = initialPanX + (e.clientX - startX);
         state.panY = initialPanY + (e.clientY - startY);
         renderTransform();
@@ -643,7 +687,7 @@
 
       window.addEventListener('mouseup', () => { isDragging = false; });
 
-      // Native Multi-Touch Pinch, Drag, & Swipe Logic for Android/iOS
+      // Multi-Touch Pinch & Panning Engine
       stage.addEventListener('touchstart', (e) => {
         if (e.target.closest('header, footer, .hud-zoom-bar')) return;
 
@@ -651,11 +695,10 @@
           e.preventDefault();
         }
 
-        const state = holeStates[currentHoleIndex];
+        const state = transformStates[currentCourseKey][currentHoleIndex];
         const now = Date.now();
 
         if (e.touches.length === 1) {
-          // Double-Tap Zoom Toggle Detection
           if (now - lastTapTime < 300) {
             if (state.scale > 1.2) {
               resetTransform();
@@ -696,7 +739,7 @@
         if (e.target.closest('header, footer, .hud-zoom-bar')) return;
         if (e.cancelable) e.preventDefault();
 
-        const state = holeStates[currentHoleIndex];
+        const state = transformStates[currentCourseKey][currentHoleIndex];
 
         if (e.touches.length === 1 && touchMode === 'PAN' && isDragging) {
           const deltaX = e.touches[0].clientX - startX;
@@ -716,7 +759,6 @@
             const ratio = currentDist / initialPinchDist;
             state.scale = Math.max(1.0, Math.min(5.0, initialScale * ratio));
 
-            // Pan centered on initial pinch point
             const currentMidX = (t1.clientX + t2.clientX) / 2;
             const currentMidY = (t1.clientY + t2.clientY) / 2;
             state.panX = initialPanX + (currentMidX - pinchCenterX);
@@ -728,13 +770,12 @@
       }, { passive: false });
 
       stage.addEventListener('touchend', (e) => {
-        const state = holeStates[currentHoleIndex];
+        const state = transformStates[currentCourseKey][currentHoleIndex];
 
         if (touchMode === 'PAN' && isDragging && e.changedTouches.length === 1) {
           const deltaX = e.changedTouches[0].clientX - startX;
           const deltaY = e.changedTouches[0].clientY - startY;
 
-          // Single finger swipe at 1x scale changes hole
           if (state.scale <= 1.05 && Math.abs(deltaX) > 50 && Math.abs(deltaX) > Math.abs(deltaY) * 1.5) {
             if (deltaX < 0) nextHole();
             else prevHole();
